@@ -69,15 +69,5 @@ public class UserController {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-//         if (user.getBirthday().isAfter(LocalDate.now())) {
-//            log.error("День рождения в будущем");
-//            throw new ValidationException("День рождения в будущем");
-//        }
-
-
-//        if (user.getLogin().contains(" ")) {
-//            log.error("Логин содержит пробелы");
-//            throw new ValidationException("Логин содержит пробелы");
-//        } else
     }
 }

@@ -74,19 +74,5 @@ public class FilmController {
             log.error("Дата релиза раньше нижней границы");
             throw new ValidationException("Дата релиза раньше нижней границы");
         }
-
-//         else if (film.getDuration() <= 0) {
-//             log.error("Продолжительность фильма неположительна");
-//             throw new ValidationException("Продолжительность фильма неположительна");
-//         }
-
-//        if (film.getName().isBlank()) {
-//            log.error("Название фильма пустое id = '{}'", film.getId());
-//            throw new ValidationException("Название фильма пустое");
-//        } else
-//        else if (film.getDescription().length() > DESC_LIMIT) {
-//            log.error("Описание фильма превышает лимит");
-//            throw new ValidationException("Описание фильма превышает лимит");
-//        }
     }
 }
