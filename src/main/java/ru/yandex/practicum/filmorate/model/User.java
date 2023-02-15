@@ -1,8 +1,11 @@
 package ru.yandex.practicum.filmorate.model;
 
-import javax.validation.constraints.*;
-
 import lombok.Data;
+
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Past;
+import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
 
 @Data
