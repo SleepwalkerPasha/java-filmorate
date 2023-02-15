@@ -46,7 +46,7 @@ public class FilmController {
 
     @PutMapping("/films")
     public Film updateFilm(@Valid @RequestBody Film film) throws ValidationException, NotFoundException {
-        //validateFilm(film);
+        validateFilm(film);
         if (filmMap.get(film.getId()) != null) {
             filmMap.put(film.getId(), film);
             log.info("Обновили фильм с id = '{}'", film.getId());

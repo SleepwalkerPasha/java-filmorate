@@ -42,7 +42,7 @@ public class UserController {
 
     @PutMapping("/users")
     public User updateUser(@Valid @RequestBody User user) throws NotFoundException, ValidationException {
-      //  validateUser(user);
+        validateUser(user);
         if (userMap.get(user.getId()) != null) {
             userMap.put(user.getId(), user);
             log.info("Обновили пользователя с id '{}'", user.getId());
