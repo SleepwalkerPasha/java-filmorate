@@ -2,19 +2,18 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
-import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static ru.yandex.practicum.filmorate.service.ValidationService.validateFilm;
 
 @Slf4j
 @RestController
@@ -25,13 +24,8 @@ public class FilmController {
     private final Map<Integer, Film> filmMap = new HashMap<>();
 
     @PostMapping("/films")
-    public Film addFilm(@Valid @RequestBody Film film, Errors errors) throws ValidationException {
-
+    public Film addFilm(@Valid @RequestBody Film film) throws ValidationException {
         validateFilm(film);
-        if (errors.hasErrors()) {
-            log.error("ошибки в валидации {}", errors.getAllErrors());
-            throw new ValidationException("ошибки в валидации" + errors.getAllErrors());
-        }
         film.setId(++count);
         if (filmMap.get(film.getId()) == null) {
             filmMap.put(film.getId(), film);
@@ -40,7 +34,6 @@ public class FilmController {
             log.error("Данный фильм уже существует");
             throw new ValidationException("Данный фильм уже существует");
         }
-
         return film;
     }
 
@@ -54,7 +47,6 @@ public class FilmController {
             log.error("Данного фильма нет. Добавьте");
             throw new NotFoundException("Данного фильма нет. Добавьте");
         }
-        // add exception
         return film;
     }
 
@@ -67,12 +59,5 @@ public class FilmController {
         }
         log.info("Получили список фильмов");
         return films;
-    }
-
-    private void validateFilm(@Valid @NotNull Film film) throws ValidationException {
-         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.error("Дата релиза раньше нижней границы");
-            throw new ValidationException("Дата релиза раньше нижней границы");
-        }
     }
 }

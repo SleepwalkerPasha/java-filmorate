@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
-import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -14,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static ru.yandex.practicum.filmorate.service.ValidationService.validateUser;
+
 @Slf4j
 @RestController
 public class UserController {
@@ -23,12 +24,8 @@ public class UserController {
     private static int count = 0;
 
     @PostMapping("/users")
-    public User addUser(@Valid @RequestBody User user, Errors errors) throws ValidationException {
+    public User addUser(@Valid @RequestBody User user) throws ValidationException {
         validateUser(user);
-        if (errors.hasErrors()) {
-            log.error("ошибки в валидации {}", errors.getAllErrors());
-            throw new ValidationException("ошибки в валидации" + errors.getAllErrors());
-        }
         user.setId(++count);
         if (userMap.get(user.getId()) == null) {
             userMap.put(user.getId(), user);
@@ -63,11 +60,5 @@ public class UserController {
         log.info("получили список пользователей");
 
         return users;
-    }
-
-    private void validateUser(@Valid User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
     }
 }
