@@ -19,15 +19,15 @@ import static ru.yandex.practicum.filmorate.service.ValidationService.validateFi
 @RestController
 public class FilmController {
 
-    private static int count = 0;
+    private int count = 0;
 
     private final Map<Integer, Film> filmMap = new HashMap<>();
 
     @PostMapping("/films")
     public Film addFilm(@Valid @RequestBody Film film) throws ValidationException {
-        validateFilm(film);
-        film.setId(++count);
-        if (filmMap.get(film.getId()) == null) {
+        if (film.getId() == null || filmMap.get(film.getId()) == null) {
+            film.setId(++count);
+            validateFilm(film);
             filmMap.put(film.getId(), film);
             log.info("Добавили новый фильм с id = '{}'", film.getId());
         } else {
@@ -39,8 +39,8 @@ public class FilmController {
 
     @PutMapping("/films")
     public Film updateFilm(@Valid @RequestBody Film film) throws ValidationException, NotFoundException {
-        validateFilm(film);
-        if (filmMap.get(film.getId()) != null) {
+        if (film.getId() != null && filmMap.get(film.getId()) != null) {
+            validateFilm(film);
             filmMap.put(film.getId(), film);
             log.info("Обновили фильм с id = '{}'", film.getId());
         } else {
@@ -54,7 +54,7 @@ public class FilmController {
     public List<Film> getFilms() throws NotFoundException {
         List<Film> films = new ArrayList<>(filmMap.values());
         if (CollectionUtils.isEmpty(films)) {
-            log.error("список пустой");
+            log.info("список пустой");
             throw new NotFoundException("список пустой");
         }
         log.info("Получили список фильмов");

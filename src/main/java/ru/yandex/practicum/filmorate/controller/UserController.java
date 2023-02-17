@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static ru.yandex.practicum.filmorate.service.ValidationService.setNameUser;
 import static ru.yandex.practicum.filmorate.service.ValidationService.validateUser;
 
 @Slf4j
@@ -21,14 +22,15 @@ public class UserController {
 
     private final Map<Integer, User> userMap = new HashMap<>();
 
-    private static int count = 0;
+    private int count = 0;
 
     @PostMapping("/users")
     public User addUser(@Valid @RequestBody User user) throws ValidationException {
-        validateUser(user);
-        user.setId(++count);
-        if (userMap.get(user.getId()) == null) {
+        if (user.getId() == null || userMap.get(user.getId()) == null) {
+            user.setId(++count);
             userMap.put(user.getId(), user);
+            setNameUser(user);
+            validateUser(user);
             log.info("Добавили нового пользователя с id '{}'", user.getId());
         } else {
             log.error("Данный пользователь уже существует");
@@ -39,9 +41,10 @@ public class UserController {
 
     @PutMapping("/users")
     public User updateUser(@Valid @RequestBody User user) throws NotFoundException, ValidationException {
-        validateUser(user);
-        if (userMap.get(user.getId()) != null) {
+        if (user.getId() != null && userMap.get(user.getId()) != null) {
             userMap.put(user.getId(), user);
+            setNameUser(user);
+            validateUser(user);
             log.info("Обновили пользователя с id '{}'", user.getId());
         } else {
             log.error("Данного пользователя нет. Зарегистрируйтесь");

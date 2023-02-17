@@ -12,9 +12,9 @@ public class User {
 
     private Integer id;
 
-    @Email(message = "Email is not valid")
+    @Email(message = "Электронная почта невалидна")
     @NotNull
-    @NotBlank(message = "email cannot be blank")
+    @NotBlank(message = "Электронная почта пустая")
     private String email;
 
     @NotBlank
@@ -24,6 +24,6 @@ public class User {
 
     private String name;
 
-    @Past
+    @Past(message = "День рождения должен быть в прошлом")
     private LocalDate birthday;
 }
