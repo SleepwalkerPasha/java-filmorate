@@ -6,6 +6,11 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,8 +21,10 @@ class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
-        filmController.addFilm(new Film(1, "ssfsf", "asdfsf",
+        FilmStorage filmStorage = new InMemoryFilmStorage();
+        FilmService filmService = new FilmService(filmStorage, new UserService(new InMemoryUserStorage()));
+        filmController = new FilmController(filmStorage, filmService);
+        filmController.addFilm(new Film(1L, "ssfsf", "asdfsf",
                 LocalDate.of(1920, 12, 12), 120));
     }
 
@@ -30,21 +37,21 @@ class FilmControllerTest {
 
     @Test
     void addFilmAlreadyExist() {
-        Film film = new Film(1, "ssfsf", "asdfsf",
+        Film film = new Film(1L, "ssfsf", "asdfsf",
                 LocalDate.of(1920, 12, 12), 120);
         Assertions.assertThrows(ValidationException.class, () -> filmController.addFilm(film), "Данный фильм уже существует");
     }
 
     @Test
     void updateFilmSuccess() {
-        Film film = new Film(1, "ssfsf", "sdfsdfsdfsd",
+        Film film = new Film(1L, "ssfsf", "sdfsdfsdfsd",
                 LocalDate.of(1920, 12, 12), 120);
         Assertions.assertDoesNotThrow(() -> filmController.updateFilm(film));
     }
 
     @Test
     void updateFilmNotExist() {
-        Film film = new Film(999, "ssfsf", "asdfsf",
+        Film film = new Film(999L, "ssfsf", "asdfsf",
                 LocalDate.of(1920, 12, 12), 120);
         Assertions.assertThrows(NotFoundException.class, () -> filmController.updateFilm(film), "Данного фильма нет. Добавьте");
     }
@@ -59,7 +66,9 @@ class FilmControllerTest {
 
     @Test
     void getFilmsFail() {
-        filmController = new FilmController();
+        FilmStorage filmStorage = new InMemoryFilmStorage();
+        FilmService filmService = new FilmService(filmStorage, new UserService(new InMemoryUserStorage()));
+        filmController = new FilmController(filmStorage, filmService);
         Assertions.assertThrows(NotFoundException.class, () -> filmController.getFilms(), "список пустой");
     }
 
