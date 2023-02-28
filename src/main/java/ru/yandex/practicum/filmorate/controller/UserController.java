@@ -18,7 +18,6 @@ import static ru.yandex.practicum.filmorate.service.ValidationService.setNameUse
 import static ru.yandex.practicum.filmorate.service.ValidationService.validateUser;
 
 @Slf4j
-@RequestMapping("/users")
 @RestController
 public class UserController {
 
@@ -34,34 +33,36 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
+    @PostMapping("/users")
     public User addUser(@Valid @RequestBody User user) throws ValidationException {
         if (user.getId() == null || userStorage.getUserById(user.getId()) == null) {
             validateUser(user);
             user.setId(++count);
             setNameUser(user);
             log.info("Добавили нового пользователя с id '{}'", user.getId());
-            return userStorage.addUser(user);
+            userStorage.addUser(user);
+            return user;
         } else {
             log.error("Данный пользователь уже существует");
             throw new ValidationException("Данный пользователь уже существует");
         }
     }
 
-    @PutMapping
+    @PutMapping("/users")
     public User updateUser(@Valid @RequestBody User user) throws NotFoundException, ValidationException {
         if (user.getId() != null && userStorage.getUserById(user.getId()) != null) {
             validateUser(user);
             setNameUser(user);
             log.info("Обновили пользователя с id '{}'", user.getId());
-            return userStorage.updateUser(user);
+            userStorage.updateUser(user);
+            return user;
         } else {
             log.error("Данного пользователя нет. Зарегистрируйтесь");
             throw new NotFoundException("Данного пользователя нет. Зарегистрируйтесь");
         }
     }
 
-    @GetMapping
+    @GetMapping("/users")
     public List<User> getUsers() throws NotFoundException {
         List<User> users = userStorage.getUsers();
         if (CollectionUtils.isEmpty(users)) {
@@ -73,7 +74,7 @@ public class UserController {
         return users;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/users/{id}")
     public User getUserById(@PathVariable long id) {
         User user = userStorage.getUserById(id);
         if (user == null) {
@@ -84,22 +85,24 @@ public class UserController {
         return user;
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public boolean addFriend(@PathVariable long id, @PathVariable long friendId) {
-        return userService.addFriend(id, friendId);
+    @PutMapping("/users/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable long id, @PathVariable long friendId) {
+        userService.addFriend(id, friendId);
+        userService.addFriend(friendId, id);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public boolean deleteFriend(@PathVariable long id, @PathVariable long friendId) {
-        return userService.deleteFriend(id, friendId);
+    @DeleteMapping("/users/{id}/friends/{friendId}")
+    public void deleteFriend(@PathVariable long id, @PathVariable long friendId) {
+        userService.deleteFriend(friendId, id);
+        userService.deleteFriend(id, friendId);
     }
 
-    @GetMapping("/{id}/friends")
+    @GetMapping("/users/{id}/friends")
     public List<User> getFriends(@PathVariable long id) {
         return userService.getFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
+    @GetMapping("/users/{id}/friends/common/{otherId}")
     public Set<User> getMutualFriends(@PathVariable long id, @PathVariable long otherId) {
         return userService.getCommonFriends(id, otherId);
     }

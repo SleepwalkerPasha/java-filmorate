@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 
-@RestControllerAdvice("src/main/java/ru/yandex/practicum/filmorate/controller")
+@RestControllerAdvice(value = "ru.yandex.practicum.filmorate.controller")
 public class ErrorHandler {
 
     @ExceptionHandler

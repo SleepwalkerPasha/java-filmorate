@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
@@ -11,7 +10,6 @@ import java.util.Set;
 
 @Data
 @AllArgsConstructor
-@RequiredArgsConstructor
 public class User {
 
     private Long id;

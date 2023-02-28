@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -13,7 +12,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@RequiredArgsConstructor
 @AllArgsConstructor
 public class Film {
 
@@ -21,7 +19,7 @@ public class Film {
 
     @NotBlank(message = "Название фильма пустое")
     @NotNull
-    private final String name;
+    private String name;
 
     @Size(max = 200, message = "Описание не больше 200 символов")
     private final String description;
