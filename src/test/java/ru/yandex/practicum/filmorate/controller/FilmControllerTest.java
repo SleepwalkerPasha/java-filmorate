@@ -65,11 +65,11 @@ class FilmControllerTest {
     }
 
     @Test
-    void getFilmsFail() {
+    void getFilmsEmpty() {
         FilmStorage filmStorage = new InMemoryFilmStorage();
         FilmService filmService = new FilmService(filmStorage, new UserService(new InMemoryUserStorage()));
         filmController = new FilmController(filmStorage, filmService);
-        Assertions.assertThrows(NotFoundException.class, () -> filmController.getFilms(), "список пустой");
+        Assertions.assertEquals(0, filmController.getFilms().size());
     }
 
 }
