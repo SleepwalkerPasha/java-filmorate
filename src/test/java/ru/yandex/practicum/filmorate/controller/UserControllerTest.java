@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,8 +19,9 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
-        userController.addUser(new User(1, "mail@mail.ru", "login", "name",
+        UserStorage storage = new InMemoryUserStorage();
+        userController = new UserController(storage, new UserService(storage));
+        userController.addUser(new User(1L,"mail@mail.ru", "login", "name",
                 LocalDate.of(2002,9,29)));
     }
 
@@ -30,21 +34,21 @@ class UserControllerTest {
 
     @Test
     void addUserAlreadyExist() {
-        User user = new User(1, "mail@mail.ru", "login", "name",
+        User user = new User(1L, "mail@mail.ru", "login", "name",
                 LocalDate.of(2002,9,29));
         Assertions.assertThrows(ValidationException.class, () -> userController.addUser(user), "Данный пользователь уже существует");
     }
 
     @Test
     void updateUserSuccess() {
-        User user = new User(1, "mail@mail.ru", "login", "name",
+        User user = new User(1L, "mail@mail.ru", "login", "name",
                 LocalDate.of(2002,9,29));
         Assertions.assertDoesNotThrow(() -> userController.updateUser(user));
     }
 
     @Test
     void updateUserNotExist() {
-        User user = new User(999, "mail@mail.ru", "login", "name",
+        User user = new User(999L, "mail@mail.ru", "login", "name",
                 LocalDate.of(2002,9,29));
         Assertions.assertThrows(NotFoundException.class, () -> userController.updateUser(user), "Данного пользователя нет. Зарегистрируйтесь");
     }
@@ -59,7 +63,8 @@ class UserControllerTest {
 
     @Test
     void getUsersFail() {
-        userController = new UserController();
+        UserStorage storage = new InMemoryUserStorage();
+        userController = new UserController(storage, new UserService(storage));
         Assertions.assertThrows(NotFoundException.class, () -> userController.getUsers(), "список пустой");
     }
 }
