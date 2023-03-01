@@ -7,8 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,13 +38,13 @@ public class FilmService {
         return filmStorage.getFilmById(filmId).removerUserLike(userId);
     }
 
-    public Set<Film> getTopTenPopularFilmsByLikes(long count) {
-        log.info("получили топ 10 фильмов по лайкам");
+    public List<Film> getTopTenPopularFilmsByLikes(long count) {
+        log.info("получили топ {} фильмов по лайкам", count);
         return filmStorage.getFilms()
                 .stream()
                 .sorted(((o1, o2) -> Long.compare(o2.getUserLikesAmount(), o1.getUserLikesAmount())))
                 .limit(count)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+                .collect(Collectors.toList());
     }
 
     void checkFilm(Long filmId) {

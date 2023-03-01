@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Set;
 
 import static ru.yandex.practicum.filmorate.service.ValidationService.validateFilm;
 
@@ -88,7 +87,7 @@ public class FilmController {
     }
 
     @GetMapping("/films/popular")
-    public Set<Film> getTopTenPopularFilmsByLikes(@RequestParam(defaultValue = "10", required = false) long count) {
+    public List<Film> getTopTenPopularFilmsByLikes(@RequestParam(defaultValue = "10", required = false) long count) {
         return filmService.getTopTenPopularFilmsByLikes(count);
     }
 }

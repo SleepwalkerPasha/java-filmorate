@@ -31,12 +31,12 @@ public class User {
 
     private final Set<Long> friends = new HashSet<>();
 
-    public boolean addFriend(long userId) {
-        return friends.add(userId);
+    public void addFriend(long userId) {
+        friends.add(userId);
     }
 
-    public boolean deleteFriend(long userId) {
-        return friends.remove(userId);
+    public void deleteFriend(long userId) {
+        friends.remove(userId);
     }
 
     public Set<Long> getFriends() {

@@ -23,30 +23,31 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public boolean addFriend(Long userId, Long friendId) {
+    public void addFriend(Long userId, Long friendId) {
         checkUser(userId);
         checkUser(friendId);
         log.info("добавлен друг id = {} у пользователя в id = {}", friendId, userId);
-        return userStorage.getUserById(userId).addFriend(friendId);
+        userStorage.getUserById(userId).addFriend(friendId);
     }
 
-    public boolean deleteFriend(Long userId, Long friendId) {
+    public void deleteFriend(Long userId, Long friendId) {
         checkUser(userId);
         checkUser(friendId);
         log.info("удален друг id = {} у пользователя в id = {}", friendId, userId);
-        return userStorage.getUserById(userId).deleteFriend(friendId);
+        userStorage.getUserById(userId).deleteFriend(friendId);
     }
 
-    public Set<User> getCommonFriends(Long user1, Long userId2) {
-        checkUser(user1);
+    public Set<User> getCommonFriends(Long userId1, Long userId2) {
+        checkUser(userId1);
         checkUser(userId2);
-        Set<User> mutualFriends = new HashSet<>();
-        for (Long friendId : userStorage.getUserById(user1).getFriends()) {
-            if (userStorage.getUserById(userId2).getFriends().contains(friendId))
-                mutualFriends.add(userStorage.getUserById(friendId));
+        Set<Long> commonFriendsIds = new HashSet<>(Set.copyOf(userStorage.getUserById(userId1).getFriends()));
+        commonFriendsIds.retainAll(userStorage.getUserById(userId2).getFriends());
+        Set<User> commonFriends = new HashSet<>();
+        for (Long id : commonFriendsIds) {
+            commonFriends.add(userStorage.getUserById(id));
         }
         log.info("Вывод общих друзей");
-        return mutualFriends;
+        return commonFriends;
     }
 
     public List<User> getFriends(Long userId) {
