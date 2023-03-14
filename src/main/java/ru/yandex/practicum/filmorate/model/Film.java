@@ -23,7 +23,12 @@ public class Film {
 
     @Size(max = 200, message = "Описание не больше 200 символов")
     private final String description;
+
     private final LocalDate releaseDate;
+
+    private final Genre genre;
+
+    private final RatingMpa ratingMpa;
 
     @NotNull
     @Positive(message = "Продолжительность фильма неположительна")
