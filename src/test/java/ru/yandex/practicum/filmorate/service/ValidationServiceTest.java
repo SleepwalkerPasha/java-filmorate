@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.RatingMpa;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -18,13 +20,13 @@ class ValidationServiceTest {
     @Test
     void validateFilmSuccess() {
         Assertions.assertDoesNotThrow(() -> validateFilm(new Film(1L, "sfdfsf", "adfsdfs",
-                LocalDate.of(2002, 12, 12), 120)));
+                LocalDate.of(2002, 12, 12), Genre.ACTION, RatingMpa.G,120)));
     }
 
     @Test
     void validateFilmFailName() {
         Film film = new Film(1L, "", "asdfsf",
-                LocalDate.of(1920, 12, 12), 120);
+                LocalDate.of(1920, 12, 12), Genre.ACTION, RatingMpa.G,120);
         Assertions.assertThrows(ValidationException.class, () -> validateFilm(film), "Название фильма пустое");
 
         film.setName(null);
@@ -37,7 +39,7 @@ class ValidationServiceTest {
         Film film = new Film(1L, "dadada", "Пятеро друзей ( комик-группа «Шарло»), " +
                 "приезжают в город Бризуль. Здесь они хотят разыскать господина Огюста Куглова, который задолжал им деньги," +
                 " а именно 20 миллионов. о Куглов, который за время «своего отсутствия», стал кандидатом Коломбани.",
-                LocalDate.of(1920, 12, 12), 120);
+                LocalDate.of(1920, 12, 12), Genre.ACTION, RatingMpa.G,120);
 
         Assertions.assertThrows(ValidationException.class, () -> validateFilm(film), "Описание не больше 200 символов");
     }
@@ -45,7 +47,7 @@ class ValidationServiceTest {
     @Test
     void validateFilmFailDuration() {
         Film film = new Film(1L, "sdfsdfsfs", "asdfsf",
-                LocalDate.of(1920, 12, 12), -1);
+                LocalDate.of(1920, 12, 12), Genre.ACTION, RatingMpa.G,-1);
 
         Assertions.assertThrows(ValidationException.class, () -> validateFilm(film), "Продолжительность фильма неположительна");
     }
@@ -53,7 +55,7 @@ class ValidationServiceTest {
     @Test
     void validateFilmFailReleaseDate() {
         Film film = new Film(1L, "sdfsdfsfs", "asdfsf",
-                LocalDate.of(1800, 12, 12), -1);
+                LocalDate.of(1800, 12, 12), Genre.ACTION, RatingMpa.G,-1);
 
         Assertions.assertThrows(ValidationException.class, () -> validateFilm(film), "Дата релиза раньше нижней границы");
     }
