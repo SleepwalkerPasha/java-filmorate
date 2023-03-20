@@ -13,14 +13,12 @@
 
 #### Запрос на 10 самых популярных по лайкам фильмов
 ~~~ sql
-select film.id, film.name
-from film
-where film_id in (
-select film_id, count(user_id)
+select film.name, count(user_id)
 from movie_likes 
-group by film_id
+left join film on film.id = movie_likes.film_id
+group by film.name
 order by count(user_id) desc
-) limit 10;
+limit 10;
 ~~~
 
 #### Запрос на получение общих друзей
@@ -35,4 +33,5 @@ where friend_id in
 from friendship
 where user_id = $user2)
 and user_id = $user1;
+
 ~~~
