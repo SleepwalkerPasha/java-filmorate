@@ -1,17 +1,16 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static ru.yandex.practicum.filmorate.service.ValidationService.validateFilm;
 
@@ -19,45 +18,76 @@ import static ru.yandex.practicum.filmorate.service.ValidationService.validateFi
 @RestController
 public class FilmController {
 
-    private int count = 0;
+    private final FilmStorage filmStorage;
 
-    private final Map<Integer, Film> filmMap = new HashMap<>();
+    private final FilmService filmService;
+
+    private long count = 0;
+
+
+    @Autowired
+    public FilmController(FilmStorage filmStorage, FilmService filmService) {
+        this.filmStorage = filmStorage;
+        this.filmService = filmService;
+    }
 
     @PostMapping("/films")
     public Film addFilm(@Valid @RequestBody Film film) throws ValidationException {
-        if (film.getId() == null || filmMap.get(film.getId()) == null) {
-            film.setId(++count);
+        if (film.getId() == null || filmStorage.getFilmById(film.getId()) == null) {
             validateFilm(film);
-            filmMap.put(film.getId(), film);
+            film.setId(++count);
             log.info("Добавили новый фильм с id = '{}'", film.getId());
+            filmStorage.addFilm(film);
+            return film;
         } else {
             log.error("Данный фильм уже существует");
             throw new ValidationException("Данный фильм уже существует");
         }
-        return film;
     }
 
     @PutMapping("/films")
     public Film updateFilm(@Valid @RequestBody Film film) throws ValidationException, NotFoundException {
-        if (film.getId() != null && filmMap.get(film.getId()) != null) {
+        if (film.getId() != null && filmStorage.getFilmById(film.getId()) != null) {
             validateFilm(film);
-            filmMap.put(film.getId(), film);
             log.info("Обновили фильм с id = '{}'", film.getId());
+            filmStorage.updateFilm(film);
+            return film;
         } else {
             log.error("Данного фильма нет. Добавьте");
             throw new NotFoundException("Данного фильма нет. Добавьте");
         }
-        return film;
     }
 
     @GetMapping("/films")
     public List<Film> getFilms() throws NotFoundException {
-        List<Film> films = new ArrayList<>(filmMap.values());
-        if (CollectionUtils.isEmpty(films)) {
-            log.info("список пустой");
-            throw new NotFoundException("список пустой");
-        }
+        List<Film> films = filmStorage.getFilms();
         log.info("Получили список фильмов");
         return films;
+    }
+
+    @GetMapping("/films/{id}")
+    public Film getFilmById(@PathVariable long id) {
+        Film film = filmStorage.getFilmById(id);
+        if (film == null) {
+            log.error("Фильма с id = {} не найдено", id);
+            throw new NotFoundException("Фильма с id =" + id + "не найдено");
+        }
+        log.info("Вывод фильма с id = {}", id);
+        return film;
+    }
+
+    @PutMapping("/films/{id}/like/{userId}")
+    public boolean addUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
+        return filmService.addUserLike(userId, filmId);
+    }
+
+    @DeleteMapping("/films/{id}/like/{userId}")
+    public boolean removeUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
+        return filmService.removeUserLike(userId, filmId);
+    }
+
+    @GetMapping("/films/popular")
+    public List<Film> getTopTenPopularFilmsByLikes(@RequestParam(defaultValue = "10", required = false) long count) {
+        return filmService.getTopTenPopularFilmsByLikes(count);
     }
 }

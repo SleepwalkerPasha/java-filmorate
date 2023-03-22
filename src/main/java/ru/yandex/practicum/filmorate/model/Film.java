@@ -8,23 +8,43 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
 public class Film {
 
-    private Integer id;
+    private Long id;
 
     @NotBlank(message = "Название фильма пустое")
     @NotNull
     private String name;
 
     @Size(max = 200, message = "Описание не больше 200 символов")
-    private String description;
-    private LocalDate releaseDate;
+    private final String description;
+
+    private final LocalDate releaseDate;
+
+    private final Genre genre;
+
+    private final RatingMpa ratingMpa;
 
     @NotNull
     @Positive(message = "Продолжительность фильма неположительна")
-    private Integer duration;
+    private final Integer duration;
 
+    private final Set<Long> userLikes = new HashSet<>();
+
+    public boolean addUserLike(Long userId) {
+        return userLikes.add(userId);
+    }
+
+    public boolean removerUserLike(Long userId) {
+        return userLikes.remove(userId);
+    }
+
+    public long getUserLikesAmount() {
+        return userLikes.size();
+    }
 }
