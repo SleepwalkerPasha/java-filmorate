@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -11,36 +10,78 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
-@AllArgsConstructor
+@Getter
+@Setter
+@Builder
 public class Film {
 
     private Long id;
 
     @NotBlank(message = "Название фильма пустое")
     @NotNull
-    private String name;
+    private final String name;
 
     @Size(max = 200, message = "Описание не больше 200 символов")
     private final String description;
 
+    @NotNull
     private final LocalDate releaseDate;
 
-    private final Genre genre;
+    private Set<Genre> genres;
 
-    private final RatingMpa ratingMpa;
+    @NotNull
+    private MpaRating mpa;
+
+    @Positive
+    private Integer rate;
 
     @NotNull
     @Positive(message = "Продолжительность фильма неположительна")
     private final Integer duration;
 
-    private final Set<Long> userLikes = new HashSet<>();
+    private Set<Long> userLikes;
+
+    public Film(@NotBlank String name, @Size(max = 200) String description, LocalDate releaseDate, MpaRating mpa, Integer duration) {
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.mpa = mpa;
+        this.duration = duration;
+        genres = new HashSet<>();
+        userLikes = new HashSet<>();
+        rate = null;
+        id = null;
+    }
+
+    public Film(@Positive Long id, @NotBlank String name, @Size(max = 200) String description, LocalDate releaseDate, MpaRating mpa, Integer rate, Integer duration) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.mpa = mpa;
+        this.rate = rate;
+        this.duration = duration;
+        this.genres = new HashSet<>();
+        this.userLikes = new HashSet<>();
+    }
+
+    public Film(@Positive Long id, @NotBlank String name, @Size(max = 200) String description, LocalDate releaseDate, Integer rate, Integer duration) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.mpa = null;
+        this.rate = rate;
+        this.duration = duration;
+        this.genres = new HashSet<>();
+        this.userLikes = new HashSet<>();
+    }
 
     public boolean addUserLike(Long userId) {
         return userLikes.add(userId);
     }
 
-    public boolean removerUserLike(Long userId) {
+    public boolean removeUserLike(Long userId) {
         return userLikes.remove(userId);
     }
 

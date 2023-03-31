@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 
 @Data
-public class Genre {
+public class MpaRating {
 
     @NotNull
     @Positive
@@ -16,4 +16,3 @@ public class Genre {
     @NotBlank
     private final String name;
 }
-
