@@ -1,3 +1,12 @@
+drop table if exists FRIENDSHIP;
+drop table if exists FILMGENRES;
+drop table if exists MOVIELIKES;
+drop table if exists USERS;
+drop table if exists FILM;
+drop table if exists RATINGMPA;
+drop table if exists GENRE;
+
+
 create table if not exists RATINGMPA
 (
     ID   BIGINT auto_increment
@@ -17,7 +26,7 @@ create table if not exists FILM
     RELEASEDATE TIMESTAMP              not null,
     DURATION    INTEGER                not null,
     RATE INTEGER,
-    MPA_ID BIGINT not null unique,
+    MPA_ID BIGINT not null,
         constraint "FILM_RATINGMPA_ID_FK"
         foreign key (MPA_ID) references RATINGMPA
 );
@@ -51,8 +60,6 @@ create table if not exists MOVIELIKES
     USER_ID BIGINT not null,
     FILM_ID BIGINT not null
 );
-
-
 
 create table if not exists USERS
 (

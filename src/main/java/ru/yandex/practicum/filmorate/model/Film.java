@@ -12,7 +12,6 @@ import java.util.Set;
 
 @Getter
 @Setter
-@Builder
 public class Film {
 
     private Long id;
@@ -41,7 +40,7 @@ public class Film {
 
     private Set<Long> userLikes;
 
-    public Film(@NotBlank String name, @Size(max = 200) String description, LocalDate releaseDate, MpaRating mpa, Integer duration) {
+    public Film(@NotBlank String name, @Size(max = 200) String description, LocalDate releaseDate, MpaRating mpa, Integer rate, Integer duration) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
@@ -49,7 +48,7 @@ public class Film {
         this.duration = duration;
         genres = new HashSet<>();
         userLikes = new HashSet<>();
-        rate = null;
+        this.rate = rate;
         id = null;
     }
 

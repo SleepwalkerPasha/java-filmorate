@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.db.user;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -25,20 +23,6 @@ class UserDbStorageTest {
 
     private final UserDbStorage userStorage;
 
-    @BeforeEach
-    void setUp() {
-        userStorage.addUser(User.builder()
-                .email("email@mail.ru")
-                .login("login")
-                .name("name")
-                .birthday(LocalDate.of(2002, 2, 12))
-                .build());
-    }
-
-    @AfterEach
-    void tearDown() {
-        userStorage.deleteUser(1L);
-    }
 
     @Test
     void addUser() {
@@ -50,125 +34,210 @@ class UserDbStorageTest {
                 .build());
 
         assertThat(userOptional).isPresent()
-                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("id", 2L));
+                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("id", 1L));
 
+        userStorage.deleteUser(userOptional.get().getId());
     }
 
     @Test
     void updateUser() {
-        Optional<User> userOptional = userStorage.updateUser(User.builder()
-                .id(1L)
+        Optional<User> userOptional = userStorage.addUser(User.builder()
+                .email("mailmail@mail.ru")
+                .login("login12")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
+
+        Optional<User> userOptional1 = userStorage.updateUser(User.builder()
+                .id(userOptional.get().getId())
                 .email("email@mail.ru")
                 .login("login")
                 .name("NewName")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
-        assertThat(userOptional).isPresent()
+        assertThat(userOptional1).isPresent()
                 .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("name", "NewName"));
+
+        userStorage.deleteUser(userOptional.get().getId());
+        userStorage.deleteUser(userOptional1.get().getId());
     }
 
     @Test
     void deleteUser() {
-        userStorage.deleteUser(1L);
+        Optional<User> userOptional = userStorage.addUser(User.builder()
+                .email("newmailmailmial@mail.ru")
+                .login("lfsdfdfn12")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
 
-        Optional<User> userOptional = userStorage.getUserById(1L);
+        userStorage.deleteUser(userOptional.get().getId());
 
-        assertThat(userOptional).isEmpty();
+        Optional<User> userOptional1 = userStorage.getUserById(1L);
+
+        assertThat(userOptional1).isEmpty();
     }
 
     @Test
     void getUserById() {
-        Optional<User> userOptional = userStorage.getUserById(1L);
+        Optional<User> userOptional = userStorage.addUser(User.builder()
+                .email("mailmailmailmiallama@mail.ru")
+                .login("lgdfgdhhjj12")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
+
+        Optional<User> userOptional1 = userStorage.getUserById(userOptional.get().getId());
 
         assertThat(userOptional).isPresent()
-                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("id", 1L));
+                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("id", userOptional.get().getId()));
+
+        userStorage.deleteUser(userOptional1.get().getId());
     }
 
     @Test
     void getUsers() {
+        Optional<User> userOptional = userStorage.addUser(User.builder()
+                .email("mailmaillamamammaaa@mail.ru")
+                .login("login125678")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
+
+        Optional<User> userOptional1 = userStorage.addUser(User.builder()
+                .email("madaddil@mail.ru")
+                .login("login123333")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
+
         List<User> users = userStorage.getUsers();
 
         assertNotNull(users);
-        assertEquals(users.size(), 1);
+        assertEquals(users.size(), 2);
+
+        userStorage.deleteUser(userOptional.get().getId());
+        userStorage.deleteUser(userOptional1.get().getId());
     }
 
     @Test
     void addFriend() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("newEmail@mail.ru")
-                .login("login12")
+                .email("mailmailgmailyandex@mail.ru")
+                .login("login121116666")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
-        boolean shouldBeTrue = userStorage.addFriend(1L, userOptional.get().getId());
+        Optional<User> userOptional1 = userStorage.addUser(User.builder()
+                .email("newEmail2446661@mail.ru")
+                .login("login124447779")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
+
+        boolean shouldBeTrue = userStorage.addFriend(userOptional.get().getId(), userOptional1.get().getId());
 
         assertTrue(shouldBeTrue);
+
+        userStorage.deleteUser(userOptional.get().getId());
+        userStorage.deleteUser(userOptional1.get().getId());
     }
 
     @Test
     void deleteFriend() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("newEmail@mail.ru")
-                .login("login12")
-                .name("name")
-                .birthday(LocalDate.of(2002, 2, 12))
-                .build());
-
-        boolean shouldBeTrue = userStorage.addFriend(1L, userOptional.get().getId());
-
-        boolean shouldBeTrueAfterDeletion = userStorage.deleteFriend(1L, userOptional.get().getId());
-
-        assertTrue(shouldBeTrueAfterDeletion);
-    }
-
-    @Test
-    void getCommonFriends() {
-        Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("newEmail@mail.ru")
+                .email("mailmail@mail.ru")
                 .login("login12")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
         Optional<User> userOptional1 = userStorage.addUser(User.builder()
-                .email("someemail@mail.ru")
-                .login("login123")
+                .email("newEmail@mail.ru")
+                .login("login12444")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
-        userStorage.addFriend(1L, userOptional.get().getId());
-        userStorage.addFriend(1L, userOptional1.get().getId());
         userStorage.addFriend(userOptional.get().getId(), userOptional1.get().getId());
 
-        Set<User> commonFriends = userStorage.getCommonFriends(1L, userOptional.get().getId());
+        boolean shouldBeTrueAfterDeletion = userStorage.deleteFriend(userOptional.get().getId(), userOptional1.get().getId());
 
-        assertNotNull(commonFriends);
-        assertEquals(1, commonFriends.size());
-        assertEquals(commonFriends.toArray()[0], userOptional1.get());
+        assertTrue(shouldBeTrueAfterDeletion);
+
+        userStorage.deleteUser(userOptional.get().getId());
+        userStorage.deleteUser(userOptional1.get().getId());
     }
 
     @Test
-    void getFriends() {
+    void getCommonFriends() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("newEmail@mail.ru")
+                .email("mailmail@mail.ru")
                 .login("login12")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
-        boolean shouldBeTrue = userStorage.addFriend(1L, userOptional.get().getId());
+        Optional<User> userOptional1 = userStorage.addUser(User.builder()
+                .email("newEmail@mail.ru")
+                .login("login12444")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
 
-        Set<User> friends = userStorage.getFriends(1L);
+        Optional<User> userOptional2 = userStorage.addUser(User.builder()
+                .email("sgdgsdg@mail.ru")
+                .login("l12312344")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
 
-        Set<User> friendsOfSecond = userStorage.getFriends(userOptional.get().getId());
+        userStorage.addFriend(userOptional.get().getId(), userOptional1.get().getId());
+        userStorage.addFriend(userOptional.get().getId(), userOptional2.get().getId());
+        userStorage.addFriend(userOptional1.get().getId(), userOptional2.get().getId());
+
+        Set<User> commonFriends = userStorage.getCommonFriends(userOptional.get().getId(), userOptional1.get().getId());
+
+        assertNotNull(commonFriends);
+        assertEquals(1, commonFriends.size());
+        assertEquals(commonFriends.toArray()[0], userOptional2.get());
+
+        userStorage.deleteUser(userOptional.get().getId());
+        userStorage.deleteUser(userOptional1.get().getId());
+        userStorage.deleteUser(userOptional2.get().getId());
+    }
+
+    @Test
+    void getFriends() {
+        Optional<User> userOptional = userStorage.addUser(User.builder()
+                .email("mailmail@mail.ru")
+                .login("login12")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
+
+        Optional<User> userOptional1 = userStorage.addUser(User.builder()
+                .email("newEmail@mail.ru")
+                .login("login12444")
+                .name("name")
+                .birthday(LocalDate.of(2002, 2, 12))
+                .build());
+
+        boolean shouldBeTrue = userStorage.addFriend(userOptional.get().getId(), userOptional1.get().getId());
+
+        Set<User> friends = userStorage.getFriends(userOptional.get().getId());
+
+        Set<User> friendsOfSecond = userStorage.getFriends(userOptional1.get().getId());
 
         assertNotNull(friends);
         assertEquals(1, friends.size());
 
         assertNotNull(friends);
         assertEquals(0, friendsOfSecond.size());
+
+        userStorage.deleteUser(userOptional.get().getId());
+        userStorage.deleteUser(userOptional1.get().getId());
     }
 }

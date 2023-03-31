@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.db.film;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -29,128 +28,211 @@ class FilmDbStorageTest {
 
     private final UserDbStorage userDbStorage;
 
-    @BeforeEach
-    void setUp() {
-        storage.addFilm(Film.builder()
-                .id(1L)
-                .name("First Movie")
-                .description("Description")
-                .releaseDate(LocalDate.of(2023, 1, 12))
-                .duration(120)
-                .rate(5)
-                .mpa(new MpaRating(1L, "PG-13"))
-                .genres(Set.of(new Genre(1L, "horror"), new Genre(2L, "Thriller")))
-                .build());
-    }
-
     @Test
     void addFilm() {
-        Optional<Film> filmOptional = storage.addFilm(Film.builder()
-                .id(2L)
-                .name("Name")
-                .description("Description")
-                .releaseDate(LocalDate.of(2023, 1, 12))
-                .duration(120)
-                .rate(5)
-                .mpa(new MpaRating(1L, "PG-13"))
-                .genres(Set.of(new Genre(1L, "horror"), new Genre(2L, "Thriller")))
-                .build());
+        Film film1 = new Film(
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional = storage.addFilm(film1);
 
         assertThat(filmOptional)
                 .isPresent()
-                .hasValueSatisfying(film -> assertThat(film).hasFieldOrPropertyWithValue("id", 2L));
+                .hasValueSatisfying(film -> assertThat(film).hasFieldOrPropertyWithValue("id", filmOptional.get().getId()));
+
+        storage.deleteFilm(filmOptional.get().getId());
     }
 
     @Test
     void updateFilm() {
-        Optional<Film> filmOptional = storage.updateFilm(Film.builder()
-                .id(1L)
-                .name("Updated Name")
-                .description("Description")
-                .releaseDate(LocalDate.of(2023, 1, 12))
-                .duration(120)
-                .rate(5)
-                .mpa(new MpaRating(1L, "PG-13"))
-                .genres(Set.of(new Genre(1L, "horror"), new Genre(2L, "Thriller")))
-                .build());
+        Film film1 = new Film(1L,
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional1 = storage.addFilm(film1);
+
+        Film film2 = new Film(filmOptional1.get().getId(),
+                "Updated Movie",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film2.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+
+        Optional<Film> filmOptional = storage.updateFilm(film2);
 
         assertThat(filmOptional)
                 .isPresent()
                 .hasValueSatisfying(film -> assertThat(film)
-                        .hasFieldOrPropertyWithValue("name", "Updated Name"));
+                        .hasFieldOrPropertyWithValue("name", "Updated Movie"));
+
+        storage.deleteFilm(filmOptional.get().getId());
     }
 
     @Test
     void deleteFilm() {
-        storage.deleteFilm(1L);
+        Film film1 = new Film(1L,
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional1 = storage.addFilm(film1);
 
-        Optional<Film> filmOptional = storage.getFilmById(1L);
+        storage.deleteFilm(filmOptional1.get().getId());
+
+        Optional<Film> filmOptional = storage.getFilmById(filmOptional1.get().getId());
 
         assertThat(filmOptional).isEmpty();
     }
 
     @Test
     void getFilmById() {
-        Optional<Film> filmOptional = storage.getFilmById(1L);
+        Film film1 = new Film(
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional1 = storage.addFilm(film1);
+
+        Optional<Film> filmOptional = storage.getFilmById(filmOptional1.get().getId());
 
         assertThat(filmOptional).isPresent().hasValueSatisfying(user -> assertThat(user)
-                .hasFieldOrPropertyWithValue("id", 1L));
+                .hasFieldOrPropertyWithValue("id", filmOptional.get().getId()));
+
+        storage.deleteFilm(filmOptional1.get().getId());
     }
 
     @Test
     void getFilms() {
+        Film film1 = new Film(
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional = storage.addFilm(film1);
+
+        Film film2 = new Film(
+                "Some name",
+                "adadadadadad",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film2.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional1 = storage.addFilm(film2);
+
+
         List<Film> films = storage.getFilms();
 
         assertNotNull(films);
-        assertEquals(films.size(), 1);
+        assertEquals(films.size(), 2);
+
+        storage.deleteFilm(filmOptional.get().getId());
+        storage.deleteFilm(filmOptional1.get().getId());
     }
 
     @Test
     void addUserLike() {
-        Optional<User> user = userDbStorage.addUser(User.builder()
-                .id(2L)
+        Film film1 = new Film(
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional = storage.addFilm(film1);
+
+        Optional<User> userOptional = userDbStorage.addUser(User.builder()
                 .email("email@mail.ru")
-                .login("login")
                 .name("name")
-                .birthday(LocalDate.of(2002, 2, 12))
+                .login("login")
+                .birthday(LocalDate.of(2000, 2, 12))
                 .build());
 
-        boolean shouldBeTrue = storage.addUserLike(user.get().getId(), 1L);
+        boolean shouldBeTrue = storage.addUserLike(userOptional.get().getId(), filmOptional.get().getId());
         assertTrue(shouldBeTrue);
+
+        storage.deleteFilm(filmOptional.get().getId());
+        userDbStorage.deleteUser(userOptional.get().getId());
     }
 
     @Test
     void removeUserLike() {
-        Optional<User> user = userDbStorage.addUser(User.builder()
-                .id(2L)
+        Film film1 = new Film(
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional = storage.addFilm(film1);
+
+        Optional<User> userOptional = userDbStorage.addUser(User.builder()
                 .email("email@mail.ru")
-                .login("login")
                 .name("name")
-                .birthday(LocalDate.of(2002, 2, 12))
+                .login("login")
+                .birthday(LocalDate.of(2000, 2, 12))
                 .build());
 
-        boolean shouldBeTrue = storage.addUserLike(user.get().getId(), 1L);
 
-        boolean shouldBeTrueAfterDeletion = storage.removeUserLike(user.get().getId(), 1L);
+        boolean shouldBeTrue = storage.addUserLike(userOptional.get().getId(), filmOptional.get().getId());
+
+        boolean shouldBeTrueAfterDeletion = storage.removeUserLike(userOptional.get().getId(), filmOptional.get().getId());
 
         assertTrue(shouldBeTrueAfterDeletion);
+
+        storage.deleteFilm(1L);
+        userDbStorage.deleteUser(userOptional.get().getId());
     }
 
     @Test
     void getTopTenPopularFilmsByLikes() {
-        Optional<User> user = userDbStorage.addUser(User.builder()
-                .id(2L)
+        Film film1 = new Film(
+                "Name",
+                "Description",
+                LocalDate.of(2023, 1, 12),
+                new MpaRating(1L, "G"),
+                5,
+                120);
+        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        Optional<Film> filmOptional = storage.addFilm(film1);
+
+        Optional<User> userOptional = userDbStorage.addUser(User.builder()
                 .email("email@mail.ru")
-                .login("login")
                 .name("name")
-                .birthday(LocalDate.of(2002, 2, 12))
+                .login("login")
+                .birthday(LocalDate.of(2000, 2, 12))
                 .build());
 
-        boolean shouldBeTrue = storage.addUserLike(user.get().getId(), 1L);
+
+        boolean shouldBeTrue = storage.addUserLike(userOptional.get().getId(), filmOptional.get().getId());
 
         List<Film> popularFilms = storage.getTopTenPopularFilmsByLikes(1L);
 
         assertNotNull(popularFilms);
         assertEquals(popularFilms.size(), 1);
+
+        storage.deleteFilm(filmOptional.get().getId());
+        userDbStorage.deleteUser(userOptional.get().getId());
     }
 }

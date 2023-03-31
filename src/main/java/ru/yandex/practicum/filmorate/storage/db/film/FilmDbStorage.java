@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
@@ -126,10 +125,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void deleteFilm(long filmId) {
-        deleteFilmFromMovieLikes(filmId);
-        deleteFilmFromMpaRelation(filmId);
-        deleteFilmFromFilmGenres(filmId);
-        deleteFilmFromFilm(filmId);
+        if (getFilmById(filmId).isPresent()) {
+            deleteFilmFromMovieLikes(filmId);
+            deleteFilmFromFilmGenres(filmId);
+            deleteFilmFromFilm(filmId);
+        }
     }
 
     @Override
@@ -142,26 +142,47 @@ public class FilmDbStorage implements FilmStorage {
             if (dto != null) {
                 film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
                         getMpa(dto.getId()), dto.getRate(), dto.getDuration());
-                film.setGenres(getGenresIdsOfFilm(id).stream().sorted(Comparator.comparing(Genre::getId))
-                        .collect(Collectors.toCollection(LinkedHashSet::new)));
-                film.setMpa(getMpa(id));
+                if (!dto.getGenres().isEmpty())
+                    film.setGenres(getGenresIdsOfFilm(id).stream().sorted(Comparator.comparing(Genre::getId))
+                            .collect(Collectors.toCollection(LinkedHashSet::new)));
+                else
+                    film.setGenres(new HashSet<>());
+                if (dto.getMpa() != null)
+                    film.setMpa(getMpa(dto.getMpa()));
+                else
+                    film.setMpa(null);
                 log.info("найден фильм {} {}", film.getId(), film.getName());
                 return Optional.of(film);
             } else {
                 log.info("фильм не найден {}", id);
-                throw new NotFoundException("фильм не найден");
+                return Optional.empty();
             }
         } catch (EmptyResultDataAccessException e) {
             if (log.isDebugEnabled()) {
                 log.debug(e.getMessage());
             }
-            throw new NotFoundException("фильм не найден");
+            return Optional.empty();
         }
     }
 
     private MpaRating getMpa(long id) {
         String sql = "SELECT * FROM RATINGMPA WHERE ID = ?";
-        return jdbcTemplate.queryForObject(sql, mpaRowMapper, id);
+        MpaRating mpa;
+        try {
+            mpa = jdbcTemplate.queryForObject(sql, mpaRowMapper, id);
+            if (mpa != null) {
+                log.info("найден рейтинг фильма");
+                return mpa;
+            } else {
+                log.info("не найден рейтинг");
+                return null;
+            }
+        } catch (EmptyResultDataAccessException e) {
+            if (log.isDebugEnabled()) {
+                log.debug(e.getMessage());
+            }
+            return null;
+        }
     }
 
     private List<Genre> getGenresIdsOfFilm(long id) {
@@ -177,7 +198,15 @@ public class FilmDbStorage implements FilmStorage {
         List<FilmDto> filmsDtos = jdbcTemplate.query(sql, filmRowMapper, 100);
         List<Film> films = new ArrayList<>();
         for (FilmDto dto : filmsDtos) {
-            films.add(new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(), getMpa(dto.getId()), dto.getRate(), dto.getDuration()));
+            MpaRating rating = null;
+            if (dto.getMpa() != null)
+                rating = getMpa(dto.getMpa());
+
+            Film film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
+                    rating, dto.getRate(), dto.getDuration());
+            List<Genre> genres = getGenresIdsOfFilm(dto.getId());
+            film.setGenres(new HashSet<>(genres));
+            films.add(film);
         }
         return films;
     }
@@ -228,15 +257,6 @@ public class FilmDbStorage implements FilmStorage {
             log.info("нет фильма с данным id из MOVIELIKES");
         else
             log.info("удален фильм с id {} из MOVIELIKES", filmId);
-    }
-
-    private void deleteFilmFromMpaRelation(long filmId) {
-        String deleteFromFilmGenres = "DELETE FROM MPARELATION WHERE FILM_ID = ?";
-        int count = jdbcTemplate.update(deleteFromFilmGenres, filmId);
-        if (count == 0)
-            log.info("нет фильма с данным id из MPARELATION");
-        else
-            log.info("удален фильм с id {} из MPARELATION", filmId);
     }
 
     private void deleteFilmFromFilmGenres(long filmId) {

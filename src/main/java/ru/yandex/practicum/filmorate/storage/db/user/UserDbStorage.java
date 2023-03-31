@@ -74,14 +74,17 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void deleteUser(long userId) {
-        deleteUserFromMovieLikes(userId);
-        deleteUserFromFriendship(userId);
-        String sql = "DELETE FROM USERS WHERE ID = ?";
-        int count = jdbcTemplate.update(sql, userId);
-        if (count == 0)
+        if (getUserById(userId).isPresent()) {
+            deleteUserFromMovieLikes(userId);
+            deleteUserFromFriendship(userId);
+            String sql = "DELETE FROM USERS WHERE ID = ?";
+            int count = jdbcTemplate.update(sql, userId);
+            if (count == 0)
+                log.info("нет пользователя с данным id");
+            else
+                log.info("удален пользователь с данным id");
+        } else
             log.info("нет пользователя с данным id");
-        else
-            log.info("удален пользователь с данным id");
     }
 
     private void deleteUserFromMovieLikes(long userId) {
