@@ -52,8 +52,8 @@ public class FilmController {
         if (film.getId() != null && filmStorage.getFilmById(film.getId()).isPresent()) {
             validateFilm(film);
             log.info("Обновили фильм с id = '{}'", film.getId());
-            filmStorage.updateFilm(film);
-            return film;
+            Optional<Film> result = filmStorage.updateFilm(film);
+            return result.get();
         } else {
             log.error("Данного фильма нет. Добавьте");
             throw new NotFoundException("Данного фильма нет. Добавьте");

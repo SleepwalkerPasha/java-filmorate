@@ -63,11 +63,12 @@ public class FilmDbStorage implements FilmStorage {
         }, key);
         long keyValue = Objects.requireNonNull(key.getKey()).longValue();
         film.setId(keyValue);
-        if (countOfRows == 0) {
-            if (!(insertIntoFilmGenres(film, keyValue))) {
-                log.info("произошла ошибка при добавлении значений film, такой уже существует");
-                return Optional.empty();
-            }
+        boolean genres = true;
+        if (!film.getGenres().isEmpty())
+            genres = insertIntoFilmGenres(film, keyValue);
+        if (!genres && countOfRows == 0) {
+            log.info("произошла ошибка при добавлении значений film, такой уже существует");
+            return Optional.empty();
         }
         log.info("добавлена запись о фильме name: {}", film.getName());
         return Optional.of(film);
@@ -81,7 +82,7 @@ public class FilmDbStorage implements FilmStorage {
         for (Genre genre : film.getGenres()) {
             int count = jdbcTemplate.update(insertGenre, filmId, genre.getId());
             if (count != 1) {
-                log.info("не записаны mpa");
+                log.info("не записаны genres");
                 return false;
             }
         }
@@ -91,9 +92,12 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Optional<Film> updateFilm(Film newFilm) {
         Optional<Film> film = getFilmById(newFilm.getId());
-        if (film.isPresent())
-            if (film.get().getGenres().size() != newFilm.getGenres().size())
+        if (film.isPresent()) {
+                deleteFilmFromFilmGenres(newFilm.getId());
+            if (film.get().getGenres().size() != newFilm.getGenres().size()) {
                 insertIntoFilmGenres(newFilm, newFilm.getId());
+            }
+        }
         String sql = "UPDATE FILM SET NAME = ?, DESCRIPTION = ?, RELEASEDATE = ?, DURATION = ?, RATE = ?, MPA_ID = ?" +
                 "WHERE ID = ?";
         int count = jdbcTemplate.update(sql, newFilm.getName(), newFilm.getDescription(), newFilm.getReleaseDate(),
@@ -105,7 +109,7 @@ public class FilmDbStorage implements FilmStorage {
             }
         }
         log.info("обновлен фильм id {}", newFilm.getId());
-        return Optional.of(newFilm);
+        return getFilmById(newFilm.getId());
     }
 
     private boolean updateFilmGenresForFilm(Film film) {
@@ -142,11 +146,9 @@ public class FilmDbStorage implements FilmStorage {
             if (dto != null) {
                 film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
                         getMpa(dto.getId()), dto.getRate(), dto.getDuration());
-                if (!dto.getGenres().isEmpty())
+                if (dto.getGenres().isEmpty())
                     film.setGenres(getGenresIdsOfFilm(id).stream().sorted(Comparator.comparing(Genre::getId))
                             .collect(Collectors.toCollection(LinkedHashSet::new)));
-                else
-                    film.setGenres(new HashSet<>());
                 if (dto.getMpa() != null)
                     film.setMpa(getMpa(dto.getMpa()));
                 else
@@ -241,6 +243,8 @@ public class FilmDbStorage implements FilmStorage {
                 " GROUP BY FILM.ID ORDER BY COUNT(USER_ID) DESC LIMIT ?)";
         log.info("вывод топ 10 фильмов по лайкам");
         List<FilmDto> list = jdbcTemplate.query(sql, filmRowMapper, count);
+        if (list.isEmpty())
+            return getFilms().stream().limit(count).collect(Collectors.toList());
         List<Film> films = new ArrayList<>();
         for (FilmDto dto : list) {
             films.add(new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
