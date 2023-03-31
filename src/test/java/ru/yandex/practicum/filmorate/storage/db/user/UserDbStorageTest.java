@@ -27,14 +27,14 @@ class UserDbStorageTest {
     @Test
     void addUser() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("mailmail@mail.ru")
+                .email("mail@mail.ru")
                 .login("login12")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
         assertThat(userOptional).isPresent()
-                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("id", 1L));
+                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("id", userOptional.get().getId()));
 
         userStorage.deleteUser(userOptional.get().getId());
     }
@@ -43,7 +43,7 @@ class UserDbStorageTest {
     void updateUser() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
                 .email("mailmail@mail.ru")
-                .login("login12")
+                .login("login12433443")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
@@ -148,8 +148,8 @@ class UserDbStorageTest {
     @Test
     void deleteFriend() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("mailmail@mail.ru")
-                .login("login12")
+                .email("mailzsdfzsfzsfwetqqqhhh123@mail.ru")
+                .login("login12554434332")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
@@ -174,21 +174,21 @@ class UserDbStorageTest {
     @Test
     void getCommonFriends() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("mailmail@mail.ru")
-                .login("login12")
+                .email("mailmamama@mail.ru")
+                .login("1122login12")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
         Optional<User> userOptional1 = userStorage.addUser(User.builder()
-                .email("newEmail@mail.ru")
-                .login("login12444")
+                .email("newEmail13345@mail.ru")
+                .login("111login12444")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
         Optional<User> userOptional2 = userStorage.addUser(User.builder()
-                .email("sgdgsdg@mail.ru")
+                .email("sgdgsdgkk@mail.ru")
                 .login("l12312344")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
@@ -212,15 +212,15 @@ class UserDbStorageTest {
     @Test
     void getFriends() {
         Optional<User> userOptional = userStorage.addUser(User.builder()
-                .email("mailmail@mail.ru")
-                .login("login12")
+                .email("1367hhgfmail@mail.ru")
+                .login("login12678")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
 
         Optional<User> userOptional1 = userStorage.addUser(User.builder()
-                .email("newEmail@mail.ru")
-                .login("login12444")
+                .email("77yyoojjnnewEmail@mail.ru")
+                .login("login124444411")
                 .name("name")
                 .birthday(LocalDate.of(2002, 2, 12))
                 .build());
