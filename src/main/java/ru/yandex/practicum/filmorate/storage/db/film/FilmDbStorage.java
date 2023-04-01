@@ -14,6 +14,9 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.db.film.dto.FilmDto;
+import ru.yandex.practicum.filmorate.storage.db.film.dto.FilmGenresDto;
+import ru.yandex.practicum.filmorate.storage.db.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.mpa.MpaDbStorage;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -34,13 +37,19 @@ public class FilmDbStorage implements FilmStorage {
 
     private final RowMapper<MpaRating> mpaRowMapper;
 
+    private final GenreDbStorage genreDbStorage;
+
+    private final MpaDbStorage mpaDbStorage;
+
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public FilmDbStorage(@Qualifier("FilmMapper") RowMapper<FilmDto> filmRowMapper, @Qualifier("GenreMapper") RowMapper<Genre> genreRowMapper, @Qualifier("MpaMapper") RowMapper<MpaRating> mpaRowMapper, JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(@Qualifier("FilmMapper") RowMapper<FilmDto> filmRowMapper, @Qualifier("GenreMapper") RowMapper<Genre> genreRowMapper, @Qualifier("MpaMapper") RowMapper<MpaRating> mpaRowMapper, GenreDbStorage genreDbStorage, MpaDbStorage mpaDbStorage, JdbcTemplate jdbcTemplate) {
         this.filmRowMapper = filmRowMapper;
         this.genreRowMapper = genreRowMapper;
         this.mpaRowMapper = mpaRowMapper;
+        this.genreDbStorage = genreDbStorage;
+        this.mpaDbStorage = mpaDbStorage;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -93,7 +102,7 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> updateFilm(Film newFilm) {
         Optional<Film> film = getFilmById(newFilm.getId());
         if (film.isPresent()) {
-                deleteFilmFromFilmGenres(newFilm.getId());
+            deleteFilmFromFilmGenres(newFilm.getId());
             if (film.get().getGenres().size() != newFilm.getGenres().size()) {
                 insertIntoFilmGenres(newFilm, newFilm.getId());
             }
@@ -147,7 +156,7 @@ public class FilmDbStorage implements FilmStorage {
                 film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
                         getMpa(dto.getId()), dto.getRate(), dto.getDuration());
                 if (dto.getGenres().isEmpty())
-                    film.setGenres(getGenresIdsOfFilm(id).stream().sorted(Comparator.comparing(Genre::getId))
+                    film.setGenres(getGenresOfFilm(id).stream().sorted(Comparator.comparing(Genre::getId))
                             .collect(Collectors.toCollection(LinkedHashSet::new)));
                 if (dto.getMpa() != null)
                     film.setMpa(getMpa(dto.getMpa()));
@@ -187,7 +196,7 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private List<Genre> getGenresIdsOfFilm(long id) {
+    private List<Genre> getGenresOfFilm(long id) {
         String sql = "SELECT * FROM GENRE WHERE ID IN " +
                 "(SELECT DISTINCT GENRE_ID FROM FILMGENRES AS FG WHERE FG.FILM_ID = ?)";
         return jdbcTemplate.query(sql, genreRowMapper, id);
@@ -199,15 +208,30 @@ public class FilmDbStorage implements FilmStorage {
         log.info("выведен список всех фильмов");
         List<FilmDto> filmsDtos = jdbcTemplate.query(sql, filmRowMapper);
         List<Film> films = new ArrayList<>();
+        List<MpaRating> mpaRatings = mpaDbStorage.getRatingMPAList();
+        List<FilmGenresDto> filmGenresDtos = jdbcTemplate.query("SELECT * FROM FILMGENRES",
+                ((rs, rowNum) -> new FilmGenresDto(rs.getLong("FILM_ID"), rs.getLong("GENRE_ID"))));
+        List<Genre> genresAll = genreDbStorage.getGenres();
         for (FilmDto dto : filmsDtos) {
             MpaRating rating = null;
             if (dto.getMpa() != null)
-                rating = getMpa(dto.getMpa());
+                for (MpaRating mpaRating : mpaRatings) {
+                    if (mpaRating.getId().equals(dto.getMpa()))
+                        rating = mpaRating;
+                }
 
             Film film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
                     rating, dto.getRate(), dto.getDuration());
-            List<Genre> genres = getGenresIdsOfFilm(dto.getId());
-            film.setGenres(new HashSet<>(genres));
+            Set<Genre> genres = new LinkedHashSet<>();
+            for (FilmGenresDto filmGenresDto : filmGenresDtos) {
+                if (filmGenresDto.getFilmId().equals(dto.getId())) {
+                    for (Genre genre : genresAll) {
+                        if (filmGenresDto.getGenreId().equals(genre.getId()))
+                            genres.add(genre);
+                    }
+                }
+            }
+            film.setGenres(genres);
             films.add(film);
         }
         return films;

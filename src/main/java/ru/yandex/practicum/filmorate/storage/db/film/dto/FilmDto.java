@@ -32,7 +32,7 @@ public class FilmDto {
     private Set<Genre> genres;
 
     @NotNull
-    private Integer mpa;
+    private Long mpa;
 
     @Positive
     private Integer rate;

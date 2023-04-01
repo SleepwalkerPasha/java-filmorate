@@ -22,7 +22,7 @@ public class FilmMapper implements RowMapper<FilmDto> {
                 rs.getString("DESCRIPTION"),
                 Objects.requireNonNull(rs.getTimestamp("RELEASEDATE")).toLocalDateTime().toLocalDate(),
                 new HashSet<>(),
-                rs.getInt("MPA_ID"),
+                rs.getLong("MPA_ID"),
                 rs.getInt("RATE"),
                 rs.getInt("DURATION"));
     }
