@@ -7,7 +7,6 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.util.List;
@@ -38,18 +37,18 @@ public class MpaDbStorage {
                 return Optional.of(rating);
             } else {
                 log.info("не найден рейтинг {}", id);
-                throw new NotFoundException("Рейтинг не найден");
+                return Optional.empty();
             }
         } catch (EmptyResultDataAccessException e) {
             if (log.isDebugEnabled())
                 log.debug(e.getMessage());
-            throw new NotFoundException("Рейтинг не найден");
+            return Optional.empty();
         }
     }
 
     public List<MpaRating> getRatingMPAList() {
-        String sql = "SELECT * FROM RATINGMPA LIMIT ?";
+        String sql = "SELECT * FROM RATINGMPA";
         log.info("выведен список рейтингов");
-        return jdbcTemplate.query(sql, mapper, 100);
+        return jdbcTemplate.query(sql, mapper);
     }
 }

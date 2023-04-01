@@ -7,7 +7,6 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
@@ -31,24 +30,24 @@ public class GenreDbStorage {
         String sql = "SELECT * FROM GENRE WHERE ID = ?";
         Genre genre;
         try {
-           genre = jdbcTemplate.queryForObject(sql, mapper, id);
-           if (genre != null) {
-               log.info("найден жанр {}", id);
-               return Optional.of(genre);
-           } else {
-               log.info("не найден жанр {}", id);
-               throw new NotFoundException("не найден жанр");
-           }
+            genre = jdbcTemplate.queryForObject(sql, mapper, id);
+            if (genre != null) {
+                log.info("найден жанр {}", id);
+                return Optional.of(genre);
+            } else {
+                log.info("не найден жанр {}", id);
+                return Optional.empty();
+            }
         } catch (EmptyResultDataAccessException e) {
             if (log.isDebugEnabled())
                 log.debug(e.getMessage());
-            throw new NotFoundException("не найден жанр");
+            return Optional.empty();
         }
     }
 
     public List<Genre> getGenres() {
-        String sql = "SELECT * FROM GENRE LIMIT ?";
+        String sql = "SELECT * FROM GENRE";
         log.info("выведен список жанров");
-        return jdbcTemplate.query(sql, mapper, 100);
+        return jdbcTemplate.query(sql, mapper);
     }
 }

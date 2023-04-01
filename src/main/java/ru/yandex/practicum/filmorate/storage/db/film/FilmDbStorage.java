@@ -195,9 +195,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilms() {
-        String sql = "SELECT * FROM FILM LIMIT ?";
-        log.info("выведен список 100 фильмов");
-        List<FilmDto> filmsDtos = jdbcTemplate.query(sql, filmRowMapper, 100);
+        String sql = "SELECT * FROM FILM";
+        log.info("выведен список всех фильмов");
+        List<FilmDto> filmsDtos = jdbcTemplate.query(sql, filmRowMapper);
         List<Film> films = new ArrayList<>();
         for (FilmDto dto : filmsDtos) {
             MpaRating rating = null;
@@ -241,7 +241,7 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getTopTenPopularFilmsByLikes(Long count) {
         String sql = "SELECT * FROM FILM WHERE FILM.ID IN (SELECT FILM.ID FROM MOVIELIKES LEFT JOIN FILM ON FILM.ID = MOVIELIKES.FILM_ID" +
                 " GROUP BY FILM.ID ORDER BY COUNT(USER_ID) DESC LIMIT ?)";
-        log.info("вывод топ 10 фильмов по лайкам");
+        log.info("вывод топ фильмов по лайкам");
         List<FilmDto> list = jdbcTemplate.query(sql, filmRowMapper, count);
         if (list.isEmpty())
             return getFilms().stream().limit(count).collect(Collectors.toList());

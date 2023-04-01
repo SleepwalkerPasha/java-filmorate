@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -66,7 +67,7 @@ public class UserDbStorage implements UserStorage {
                 newUser.getBirthday(), newUser.getId());
         if (count == 0) {
             log.info("пользователя с таким id нет");
-            return Optional.empty();
+            throw new NotFoundException("пользователя с таким id нет");
         }
         log.info("обновлен пользователь с id {}", newUser.getId());
         return Optional.of(newUser);
@@ -128,9 +129,9 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getUsers() {
-        String sql = "SELECT * FROM USERS LIMIT ?";
+        String sql = "SELECT * FROM USERS";
         log.info("выведен список 100 пользователей");
-        return jdbcTemplate.query(sql, mapper, 100);
+        return jdbcTemplate.query(sql, mapper);
     }
 
     @Override

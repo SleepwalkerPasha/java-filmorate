@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.db.genre.GenreDbStorage;
 
@@ -23,7 +24,9 @@ public class GenreController {
     @GetMapping("/genres/{id}")
     public Genre getGenreById(@PathVariable Long id) {
         Optional<Genre> genreOptional = storage.getGenreById(id);
-        return genreOptional.orElse(new Genre(999L, "undefined"));
+        if (genreOptional.isEmpty())
+            throw new NotFoundException("не найден жанр с id = " + id);
+        return genreOptional.get();
     }
 
     @GetMapping("/genres")

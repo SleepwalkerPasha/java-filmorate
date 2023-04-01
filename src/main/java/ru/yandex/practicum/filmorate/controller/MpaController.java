@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.db.mpa.MpaDbStorage;
 
@@ -23,7 +24,9 @@ public class MpaController {
     @GetMapping("/mpa/{id}")
     public MpaRating getRatingMPAById(@PathVariable Long id) {
         Optional<MpaRating> ratingOptional = storage.getRatingMPAById(id);
-        return ratingOptional.orElse(new MpaRating(999L, "undefined"));
+        if (ratingOptional.isEmpty())
+            throw new NotFoundException("Рейтинг не найден");
+        return ratingOptional.get();
     }
 
     @GetMapping("/mpa")
