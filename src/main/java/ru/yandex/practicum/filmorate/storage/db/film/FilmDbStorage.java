@@ -63,7 +63,6 @@ public class FilmDbStorage implements FilmStorage {
         }, key);
         long keyValue = Objects.requireNonNull(key.getKey()).longValue();
         film.setId(keyValue);
-        boolean genres = true;
         insertIntoFilmGenres(film, keyValue);
         if (countOfRows == 0) {
             log.info("произошла ошибка при добавлении значений film, такой уже существует");
@@ -168,15 +167,16 @@ public class FilmDbStorage implements FilmStorage {
 
         Map<Long, Set<Genre>> filmGenreMap = new HashMap<>();
 
-        for (FilmGenresDto dto : filmGenresDtos)
-            filmGenreMap.computeIfAbsent(dto.getFilmId(), k -> new LinkedHashSet<>())
-                    .add(new Genre(dto.getGenreId(), dto.getGenreName()));
+        for (FilmGenresDto filmGenresDto : filmGenresDtos)
+            filmGenreMap.computeIfAbsent(filmGenresDto.getFilmId(), k -> new LinkedHashSet<>())
+                    .add(new Genre(filmGenresDto.getGenreId(), filmGenresDto.getGenreName()));
 
         for (FilmDto dto : filmsDtos) {
             MpaRating rating = new MpaRating(dto.getMpa(), dto.getMpaName());
             Film film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
                     rating, dto.getRate(), dto.getDuration());
-            film.setGenres(filmGenreMap.get(dto.getId()));
+            Set<Genre> genres = filmGenreMap.get(dto.getId());
+            film.setGenres(Objects.requireNonNullElseGet(genres, LinkedHashSet::new));
             films.add(film);
         }
         return films;
