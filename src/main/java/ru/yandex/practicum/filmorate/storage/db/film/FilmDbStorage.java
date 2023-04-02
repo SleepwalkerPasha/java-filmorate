@@ -128,7 +128,7 @@ public class FilmDbStorage implements FilmStorage {
                         new MpaRating(dto.getMpa(), dto.getMpaName()), dto.getRate(), dto.getDuration());
                 if (dto.getGenres().isEmpty())
                     film.setGenres(getGenresOfFilm(id).stream().sorted(Comparator.comparing(Genre::getId))
-                            .collect(Collectors.toCollection(LinkedHashSet::new)));
+                            .collect(Collectors.toCollection(LinkedList::new)));
                 log.info("найден фильм {} {}", film.getId(), film.getName());
                 return Optional.of(film);
             } else {
@@ -165,18 +165,18 @@ public class FilmDbStorage implements FilmStorage {
                                 rs.getLong("GENRE_ID"),
                                 rs.getString("GENRE_NAME"))));
 
-        Map<Long, Set<Genre>> filmGenreMap = new HashMap<>();
+        Map<Long, List<Genre>> filmGenreMap = new HashMap<>();
 
         for (FilmGenresDto filmGenresDto : filmGenresDtos)
-            filmGenreMap.computeIfAbsent(filmGenresDto.getFilmId(), k -> new LinkedHashSet<>())
+            filmGenreMap.computeIfAbsent(filmGenresDto.getFilmId(), k -> new LinkedList<>())
                     .add(new Genre(filmGenresDto.getGenreId(), filmGenresDto.getGenreName()));
 
         for (FilmDto dto : filmsDtos) {
             MpaRating rating = new MpaRating(dto.getMpa(), dto.getMpaName());
             Film film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
                     rating, dto.getRate(), dto.getDuration());
-            Set<Genre> genres = filmGenreMap.get(dto.getId());
-            film.setGenres(Objects.requireNonNullElseGet(genres, LinkedHashSet::new));
+            List<Genre> genres = filmGenreMap.get(dto.getId());
+            film.setGenres(Objects.requireNonNullElseGet(genres, LinkedList::new));
             films.add(film);
         }
         return films;

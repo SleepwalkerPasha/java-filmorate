@@ -9,7 +9,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -28,7 +30,7 @@ public class Film {
     @NotNull
     private final LocalDate releaseDate;
 
-    private Set<Genre> genres;
+    private List<Genre> genres;
 
     @NotNull
     @JsonProperty("mpa")
@@ -48,7 +50,7 @@ public class Film {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-        this.genres = new HashSet<>();
+        this.genres = new ArrayList<>();
         this.userLikes = new HashSet<>();
     }
 
@@ -58,7 +60,7 @@ public class Film {
         this.releaseDate = releaseDate;
         this.mpa = mpa;
         this.duration = duration;
-        genres = new HashSet<>();
+        genres = new ArrayList<>();
         userLikes = new HashSet<>();
         this.rate = rate;
         id = null;
@@ -72,7 +74,7 @@ public class Film {
         this.mpa = mpa;
         this.rate = rate;
         this.duration = duration;
-        this.genres = new HashSet<>();
+        this.genres = new ArrayList<>();
         this.userLikes = new HashSet<>();
     }
 
@@ -84,7 +86,7 @@ public class Film {
         this.mpa = null;
         this.rate = rate;
         this.duration = duration;
-        this.genres = new HashSet<>();
+        this.genres = new ArrayList<>();
         this.userLikes = new HashSet<>();
     }
 
