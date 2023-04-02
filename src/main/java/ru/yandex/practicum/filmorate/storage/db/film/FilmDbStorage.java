@@ -63,7 +63,6 @@ public class FilmDbStorage implements FilmStorage {
         }, key);
         long keyValue = Objects.requireNonNull(key.getKey()).longValue();
         film.setId(keyValue);
-        boolean genres = true;
         insertIntoFilmGenres(film, keyValue);
         if (countOfRows == 0) {
             log.info("произошла ошибка при добавлении значений film, такой уже существует");
