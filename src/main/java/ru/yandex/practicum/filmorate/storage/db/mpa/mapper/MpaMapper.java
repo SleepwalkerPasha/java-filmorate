@@ -13,6 +13,6 @@ import java.sql.SQLException;
 public class MpaMapper implements RowMapper<MpaRating> {
     @Override
     public MpaRating mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new MpaRating(rs.getLong("ID"), rs.getString("NAME"));
+        return new MpaRating(rs.getLong("ID"), rs.getString("MPA_NAME"));
     }
 }

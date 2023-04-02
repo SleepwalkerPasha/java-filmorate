@@ -34,6 +34,9 @@ public class FilmDto {
     @NotNull
     private Long mpa;
 
+    @NotNull
+    private String mpaName;
+
     @Positive
     private Integer rate;
 

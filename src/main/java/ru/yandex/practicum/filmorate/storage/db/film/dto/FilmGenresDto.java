@@ -12,4 +12,7 @@ public class FilmGenresDto {
 
     @NotNull
     private final Long genreId;
+
+    @NotNull
+    private final String genreName;
 }

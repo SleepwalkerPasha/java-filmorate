@@ -15,8 +15,6 @@ import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.db.film.dto.FilmDto;
 import ru.yandex.practicum.filmorate.storage.db.film.dto.FilmGenresDto;
-import ru.yandex.practicum.filmorate.storage.db.genre.GenreDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.mpa.MpaDbStorage;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -35,21 +33,14 @@ public class FilmDbStorage implements FilmStorage {
 
     private final RowMapper<Genre> genreRowMapper;
 
-    private final RowMapper<MpaRating> mpaRowMapper;
-
-    private final GenreDbStorage genreDbStorage;
-
-    private final MpaDbStorage mpaDbStorage;
-
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public FilmDbStorage(@Qualifier("FilmMapper") RowMapper<FilmDto> filmRowMapper, @Qualifier("GenreMapper") RowMapper<Genre> genreRowMapper, @Qualifier("MpaMapper") RowMapper<MpaRating> mpaRowMapper, GenreDbStorage genreDbStorage, MpaDbStorage mpaDbStorage, JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(@Qualifier("FilmMapper") RowMapper<FilmDto> filmRowMapper,
+                         @Qualifier("GenreMapper") RowMapper<Genre> genreRowMapper,
+                         JdbcTemplate jdbcTemplate) {
         this.filmRowMapper = filmRowMapper;
         this.genreRowMapper = genreRowMapper;
-        this.mpaRowMapper = mpaRowMapper;
-        this.genreDbStorage = genreDbStorage;
-        this.mpaDbStorage = mpaDbStorage;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -88,12 +79,18 @@ public class FilmDbStorage implements FilmStorage {
         if (film.getGenres().isEmpty())
             return true;
         String insertGenre = "INSERT INTO FILMGENRES (FILM_ID, GENRE_ID) VALUES (?, ?)";
+        List<Object[]> batch = new ArrayList<>();
         for (Genre genre : film.getGenres()) {
-            int count = jdbcTemplate.update(insertGenre, filmId, genre.getId());
-            if (count != 1) {
-                log.info("не записаны genres");
-                return false;
-            }
+            Object[] values = new Object[]{
+                    filmId,
+                    genre.getId()
+            };
+            batch.add(values);
+        }
+        int[] counts = jdbcTemplate.batchUpdate(insertGenre, batch);
+        if (counts.length == 1) {
+            log.info("не записаны genres");
+            return false;
         }
         return true;
     }
@@ -103,37 +100,18 @@ public class FilmDbStorage implements FilmStorage {
         Optional<Film> film = getFilmById(newFilm.getId());
         if (film.isPresent()) {
             deleteFilmFromFilmGenres(newFilm.getId());
-            if (film.get().getGenres().size() != newFilm.getGenres().size()) {
-                insertIntoFilmGenres(newFilm, newFilm.getId());
-            }
+            insertIntoFilmGenres(newFilm, newFilm.getId());
         }
         String sql = "UPDATE FILM SET NAME = ?, DESCRIPTION = ?, RELEASEDATE = ?, DURATION = ?, RATE = ?, MPA_ID = ?" +
                 "WHERE ID = ?";
         int count = jdbcTemplate.update(sql, newFilm.getName(), newFilm.getDescription(), newFilm.getReleaseDate(),
                 newFilm.getDuration(), newFilm.getRate(), newFilm.getMpa().getId(), newFilm.getId());
         if (count == 0) {
-            if (!updateFilmGenresForFilm(newFilm)) {
-                log.info("произошла ошибка при обновлении значений");
-                return Optional.empty();
-            }
+            log.info("произошла ошибка при обновлении значений");
+            return Optional.empty();
         }
         log.info("обновлен фильм id {}", newFilm.getId());
         return getFilmById(newFilm.getId());
-    }
-
-    private boolean updateFilmGenresForFilm(Film film) {
-        if (film.getGenres().isEmpty())
-            return true;
-        long filmId = film.getId();
-        String updateGenres = "UPDATE FILMGENRES SET GENRE_ID = ? WHERE FILM_ID = ?";
-        for (Genre genre : film.getGenres()) {
-            int count = jdbcTemplate.update(updateGenres, genre.getId(), filmId);
-            if (count != 1) {
-                log.info("ошибка при обновлении mpa");
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
@@ -147,21 +125,17 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> getFilmById(long id) {
-        String sql = "SELECT * FROM FILM AS F WHERE F.ID = ?";
+        String sql = "SELECT * FROM FILM AS F INNER JOIN RATINGMPA AS R ON R.ID = F.MPA_ID WHERE F.ID = ?";
         FilmDto dto;
         Film film;
         try {
             dto = jdbcTemplate.queryForObject(sql, filmRowMapper, id);
             if (dto != null) {
                 film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
-                        getMpa(dto.getId()), dto.getRate(), dto.getDuration());
+                        new MpaRating(dto.getMpa(), dto.getMpaName()), dto.getRate(), dto.getDuration());
                 if (dto.getGenres().isEmpty())
                     film.setGenres(getGenresOfFilm(id).stream().sorted(Comparator.comparing(Genre::getId))
                             .collect(Collectors.toCollection(LinkedHashSet::new)));
-                if (dto.getMpa() != null)
-                    film.setMpa(getMpa(dto.getMpa()));
-                else
-                    film.setMpa(null);
                 log.info("найден фильм {} {}", film.getId(), film.getName());
                 return Optional.of(film);
             } else {
@@ -176,26 +150,6 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private MpaRating getMpa(long id) {
-        String sql = "SELECT * FROM RATINGMPA WHERE ID = ?";
-        MpaRating mpa;
-        try {
-            mpa = jdbcTemplate.queryForObject(sql, mpaRowMapper, id);
-            if (mpa != null) {
-                log.info("найден рейтинг фильма");
-                return mpa;
-            } else {
-                log.info("не найден рейтинг");
-                return null;
-            }
-        } catch (EmptyResultDataAccessException e) {
-            if (log.isDebugEnabled()) {
-                log.debug(e.getMessage());
-            }
-            return null;
-        }
-    }
-
     private List<Genre> getGenresOfFilm(long id) {
         String sql = "SELECT * FROM GENRE WHERE ID IN " +
                 "(SELECT DISTINCT GENRE_ID FROM FILMGENRES AS FG WHERE FG.FILM_ID = ?)";
@@ -204,31 +158,28 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilms() {
-        String sql = "SELECT * FROM FILM";
+        String sql = "SELECT F.ID AS FILM_ID, F.NAME AS FILM_NAME, DESCRIPTION, RELEASEDATE, MPA_ID," +
+                " R.MPA_NAME AS MPA_NAME, RATE, DURATION FROM FILM AS F INNER JOIN RATINGMPA AS R ON F.MPA_ID = R.ID";
         log.info("выведен список всех фильмов");
         List<FilmDto> filmsDtos = jdbcTemplate.query(sql, filmRowMapper);
         List<Film> films = new ArrayList<>();
-        List<MpaRating> mpaRatings = mpaDbStorage.getRatingMPAList();
-        List<FilmGenresDto> filmGenresDtos = jdbcTemplate.query("SELECT * FROM FILMGENRES",
-                ((rs, rowNum) -> new FilmGenresDto(rs.getLong("FILM_ID"), rs.getLong("GENRE_ID"))));
-        List<Genre> genresAll = genreDbStorage.getGenres();
+        List<FilmGenresDto> filmGenresDtos = jdbcTemplate.query("SELECT FILM_ID, GENRE_ID, G.NAME AS GENRE_NAME " +
+                        "FROM FILMGENRES " +
+                        "AS FG INNER JOIN GENRE AS G " +
+                        "ON FG.GENRE_ID = G.ID",
+                ((rs, rowNum) ->
+                        new FilmGenresDto(rs.getLong("FILM_ID"),
+                                rs.getLong("GENRE_ID"),
+                                rs.getString("GENRE_NAME"))));
         for (FilmDto dto : filmsDtos) {
-            MpaRating rating = null;
-            if (dto.getMpa() != null)
-                for (MpaRating mpaRating : mpaRatings) {
-                    if (mpaRating.getId().equals(dto.getMpa()))
-                        rating = mpaRating;
-                }
-
+            MpaRating rating = new MpaRating(dto.getMpa(), dto.getMpaName());
             Film film = new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
                     rating, dto.getRate(), dto.getDuration());
+
             Set<Genre> genres = new LinkedHashSet<>();
             for (FilmGenresDto filmGenresDto : filmGenresDtos) {
                 if (filmGenresDto.getFilmId().equals(dto.getId())) {
-                    for (Genre genre : genresAll) {
-                        if (filmGenresDto.getGenreId().equals(genre.getId()))
-                            genres.add(genre);
-                    }
+                    genres.add(new Genre(filmGenresDto.getGenreId(), filmGenresDto.getGenreName()));
                 }
             }
             film.setGenres(genres);
@@ -263,8 +214,10 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopTenPopularFilmsByLikes(Long count) {
-        String sql = "SELECT * FROM FILM WHERE FILM.ID IN (SELECT FILM.ID FROM MOVIELIKES LEFT JOIN FILM ON FILM.ID = MOVIELIKES.FILM_ID" +
-                " GROUP BY FILM.ID ORDER BY COUNT(USER_ID) DESC LIMIT ?)";
+        String sql = "SELECT F.ID AS FILM_ID, F.NAME AS FILM_NAME, DESCRIPTION, RELEASEDATE, MPA_ID," +
+                "R.MPA_NAME AS MPA_NAME, RATE, DURATION FROM FILM AS F INNER JOIN RATINGMPA AS R ON R.ID = F.MPA_ID " +
+                "WHERE F.ID IN (SELECT F.ID FROM MOVIELIKES LEFT JOIN FILM AS F ON F.ID = MOVIELIKES.FILM_ID" +
+                " GROUP BY F.ID ORDER BY COUNT(USER_ID) DESC LIMIT ?)";
         log.info("вывод топ фильмов по лайкам");
         List<FilmDto> list = jdbcTemplate.query(sql, filmRowMapper, count);
         if (list.isEmpty())
@@ -272,7 +225,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films = new ArrayList<>();
         for (FilmDto dto : list) {
             films.add(new Film(dto.getId(), dto.getName(), dto.getDescription(), dto.getReleaseDate(),
-                    getMpa(dto.getId()), dto.getRate(), dto.getDuration()));
+                    new MpaRating(dto.getMpa(), dto.getMpaName()), dto.getRate(), dto.getDuration()));
         }
         return films;
     }
