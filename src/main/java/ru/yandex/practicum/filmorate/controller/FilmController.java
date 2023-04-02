@@ -2,15 +2,17 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.service.ValidationService.validateFilm;
 
@@ -26,14 +28,14 @@ public class FilmController {
 
 
     @Autowired
-    public FilmController(FilmStorage filmStorage, FilmService filmService) {
+    public FilmController(@Qualifier("FilmDbStorage") FilmStorage filmStorage, FilmService filmService) {
         this.filmStorage = filmStorage;
         this.filmService = filmService;
     }
 
     @PostMapping("/films")
     public Film addFilm(@Valid @RequestBody Film film) throws ValidationException {
-        if (film.getId() == null || filmStorage.getFilmById(film.getId()) == null) {
+        if (film.getId() == null || filmStorage.getFilmById(film.getId()).isEmpty()) {
             validateFilm(film);
             film.setId(++count);
             log.info("Добавили новый фильм с id = '{}'", film.getId());
@@ -47,11 +49,11 @@ public class FilmController {
 
     @PutMapping("/films")
     public Film updateFilm(@Valid @RequestBody Film film) throws ValidationException, NotFoundException {
-        if (film.getId() != null && filmStorage.getFilmById(film.getId()) != null) {
+        if (film.getId() != null && filmStorage.getFilmById(film.getId()).isPresent()) {
             validateFilm(film);
             log.info("Обновили фильм с id = '{}'", film.getId());
-            filmStorage.updateFilm(film);
-            return film;
+            Optional<Film> result = filmStorage.updateFilm(film);
+            return result.get();
         } else {
             log.error("Данного фильма нет. Добавьте");
             throw new NotFoundException("Данного фильма нет. Добавьте");
@@ -67,13 +69,13 @@ public class FilmController {
 
     @GetMapping("/films/{id}")
     public Film getFilmById(@PathVariable long id) {
-        Film film = filmStorage.getFilmById(id);
-        if (film == null) {
+        Optional<Film> film = filmStorage.getFilmById(id);
+        if (film.isEmpty()) {
             log.error("Фильма с id = {} не найдено", id);
             throw new NotFoundException("Фильма с id =" + id + "не найдено");
         }
         log.info("Вывод фильма с id = {}", id);
-        return film;
+        return film.get();
     }
 
     @PutMapping("/films/{id}/like/{userId}")

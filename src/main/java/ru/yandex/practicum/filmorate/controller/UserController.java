@@ -2,16 +2,18 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static ru.yandex.practicum.filmorate.service.ValidationService.setNameUser;
@@ -28,14 +30,14 @@ public class UserController {
     private long count = 0;
 
     @Autowired
-    public UserController(UserStorage userStorage, UserService userService) {
+    public UserController(@Qualifier("UserDbStorage") UserStorage userStorage, UserService userService) {
         this.userStorage = userStorage;
         this.userService = userService;
     }
 
     @PostMapping("/users")
     public User addUser(@Valid @RequestBody User user) throws ValidationException {
-        if (user.getId() == null || userStorage.getUserById(user.getId()) == null) {
+        if (user.getId() == null || userStorage.getUserById(user.getId()).isEmpty()) {
             validateUser(user);
             user.setId(++count);
             setNameUser(user);
@@ -50,7 +52,7 @@ public class UserController {
 
     @PutMapping("/users")
     public User updateUser(@Valid @RequestBody User user) throws NotFoundException, ValidationException {
-        if (user.getId() != null && userStorage.getUserById(user.getId()) != null) {
+        if (user.getId() != null && userStorage.getUserById(user.getId()).isPresent()) {
             validateUser(user);
             setNameUser(user);
             log.info("Обновили пользователя с id '{}'", user.getId());
@@ -76,19 +78,18 @@ public class UserController {
 
     @GetMapping("/users/{id}")
     public User getUserById(@PathVariable long id) {
-        User user = userStorage.getUserById(id);
-        if (user == null) {
+        Optional<User> user = userStorage.getUserById(id);
+        if (user.isEmpty()) {
             log.error("Данного пользователя с id {} не существует", id);
             throw new NotFoundException("Данного пользователя с id " + id + " не существует");
         }
         log.info("вывод пользователя с id {}", id);
-        return user;
+        return user.get();
     }
 
     @PutMapping("/users/{id}/friends/{friendId}")
     public void addFriend(@PathVariable long id, @PathVariable long friendId) {
         userService.addFriend(id, friendId);
-        userService.addFriend(friendId, id);
     }
 
     @DeleteMapping("/users/{id}/friends/{friendId}")
@@ -98,7 +99,7 @@ public class UserController {
     }
 
     @GetMapping("/users/{id}/friends")
-    public List<User> getFriends(@PathVariable long id) {
+    public Set<User> getFriends(@PathVariable long id) {
         return userService.getFriends(id);
     }
 
