@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.storage.db.user.UserDbStorage;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,7 +36,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional = storage.addFilm(film1);
 
         assertThat(filmOptional)
@@ -56,7 +55,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional1 = storage.addFilm(film1);
 
         Film film2 = new Film(filmOptional1.get().getId(),
@@ -66,7 +65,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film2.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film2.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
 
         Optional<Film> filmOptional = storage.updateFilm(film2);
 
@@ -87,7 +86,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional1 = storage.addFilm(film1);
 
         storage.deleteFilm(filmOptional1.get().getId());
@@ -106,7 +105,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional1 = storage.addFilm(film1);
 
         Optional<Film> filmOptional = storage.getFilmById(filmOptional1.get().getId());
@@ -126,7 +125,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional = storage.addFilm(film1);
 
         Film film2 = new Film(
@@ -136,7 +135,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film2.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film2.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional1 = storage.addFilm(film2);
 
 
@@ -158,7 +157,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional = storage.addFilm(film1);
 
         Optional<User> userOptional = userDbStorage.addUser(User.builder()
@@ -184,7 +183,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional = storage.addFilm(film1);
 
         Optional<User> userOptional = userDbStorage.addUser(User.builder()
@@ -214,7 +213,7 @@ class FilmDbStorageTest {
                 new MpaRating(1L, "G"),
                 5,
                 120);
-        film1.setGenres(Set.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
+        film1.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         Optional<Film> filmOptional = storage.addFilm(film1);
 
         Optional<User> userOptional = userDbStorage.addUser(User.builder()
